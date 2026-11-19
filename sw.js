@@ -1,5 +1,5 @@
 // Service worker: guarda la app en caché para que abra sin conexión en el gimnasio.
-const CACHE = 'nivelfit-v2';
+const CACHE = 'nivelfit-v3';
 const ASSETS = ['./', 'index.html', 'styles.css', 'data.js', 'app.js', 'manifest.webmanifest', 'icons/icon.svg', 'icons/icon-192.png', 'icons/icon-512.png'];
 
 self.addEventListener('install', e => {

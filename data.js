@@ -73,6 +73,11 @@ const EXERCISES = {
     tips: ['Acostado, brazos verticales.', 'Bajá doblando solo los codos hacia la frente.', 'Codos apuntando al techo, no hacia afuera.'],
     q: 'press frances tecnica correcta',
   },
+  flexiones: {
+    name: 'Flexiones de brazos', group: 'Pecho', zone: 'upper', bodyweight: true,
+    tips: ['Hasta que queden 1-2 reps en reserva.', 'Si cuestan, manos apoyadas en un banco; cuando salgan más de 15, bajá la altura hasta el piso.', 'Cuerpo recto, codos a ~45°.'],
+    q: 'flexiones de brazos tecnica correcta',
+  },
   // ---- Tren inferior ----
   prensa: {
     name: 'Prensa de piernas', group: 'Piernas', zone: 'lower',
@@ -145,6 +150,16 @@ const EXERCISES = {
     tips: ['De rodillas, soga a los costados de la cabeza.', 'Enroscá el torso llevando codos a los muslos.', 'La cadera no se mueve.'],
     q: 'crunch en polea alta tecnica',
   },
+  elev_piernas: {
+    name: 'Elevación de piernas acostado', group: 'Core', zone: 'core',
+    tips: ['Boca arriba, manos bajo la cola, lumbar pegada al piso.', 'Subí las piernas rectas hasta 90° y bajá lento sin tocar el piso.'],
+    q: 'elevacion de piernas acostado abdominales tecnica',
+  },
+  plancha_lateral: {
+    name: 'Plancha lateral (por lado)', group: 'Core', zone: 'core', time: true,
+    tips: ['Codo bajo el hombro, cadera alta y cuerpo en línea recta.', 'Hacé el tiempo de cada serie de un lado y después del otro. Se registra en segundos por lado.'],
+    q: 'plancha lateral tecnica correcta',
+  },
   // ---- Cardio ----
   cardio_z2: {
     name: 'Cardio zona 2 (bici fija, cinta inclinada o elíptico)', group: 'Cardio', zone: 'cardio', cardio: true,
@@ -155,12 +170,12 @@ const EXERCISES = {
 
 // Fases del plan de reintroducción (semanas desde el inicio).
 const PHASES = [
-  { id: 1, from: 1, to: 2, name: 'Fase 1 · Adaptación', sets: 2, reps: [12, 15], rir: '3-4', time: [20, 30], cardio: 25,
-    desc: 'Aprender la técnica y que el cuerpo se acostumbre. Terminá cada serie sintiendo que podrías hacer 3-4 reps más. Es normal tener agujetas los primeros días.' },
-  { id: 2, from: 3, to: 4, name: 'Fase 2 · Base', sets: 3, reps: [10, 12], rir: '2-3', time: [30, 45], cardio: 30,
-    desc: 'Sumamos una serie. Te tienen que quedar 2-3 reps en reserva.' },
-  { id: 3, from: 5, to: 6, name: 'Fase 3 · Progresión', sets: 3, reps: [8, 12], rir: '1-2', time: [40, 60], cardio: 35,
-    desc: 'Ya podés apretar más: 1-2 reps en reserva. La app te va a pedir subir peso seguido.' },
+  { id: 1, from: 1, to: 1, name: 'Fase 1 · Adaptación', sets: 2, reps: [10, 12], rir: '3', time: [20, 30], cardio: 25,
+    desc: 'Una semana para retomar la técnica y que el cuerpo se acostumbre. Terminá cada serie sintiendo que podrías hacer 3 reps más. Es normal tener agujetas los primeros días.' },
+  { id: 2, from: 2, to: 3, name: 'Fase 2 · Base', sets: 3, reps: [10, 12], rir: '2', time: [30, 45], cardio: 30,
+    desc: 'Sumamos una serie. Te tienen que quedar 2 reps en reserva.' },
+  { id: 3, from: 4, to: 6, name: 'Fase 3 · Progresión', sets: 3, reps: [8, 12], rir: '1-2', time: [45, 60], cardio: 35, compoundSets: 4,
+    desc: 'Ya podés apretar más: 1-2 reps en reserva y 4 series en los ejercicios básicos. La app te va a pedir subir peso seguido.' },
   { id: 4, from: 7, to: 999, name: 'Construcción', sets: 3, reps: [8, 12], rir: '1-2', time: [45, 60], cardio: 40, compoundSets: 4,
     desc: 'Plan de reintroducción terminado. Doble progresión: cuando completás todas las series en el tope de reps, subís peso.' },
 ];
@@ -168,12 +183,28 @@ const PHASES = [
 const COMPOUNDS = ['press_pecho_maq', 'jalon_pecho', 'prensa', 'press_inclinado_manc', 'remo_manc', 'sentadilla_goblet', 'pm_rumano', 'hip_thrust'];
 
 // Rutina semanal: 1 = lunes ... 5 = viernes
+// fixedSets: ejercicios de cierre con series fijas. rir: reemplaza el RIR de la fase ese día.
 const ROUTINE = {
-  1: { key: 'sup_a', name: 'Tren superior A', emoji: '💪', ex: ['press_pecho_maq', 'jalon_pecho', 'press_hombro_manc', 'remo_polea', 'elev_laterales', 'curl_manc', 'ext_triceps_polea'] },
-  2: { key: 'inf_a', name: 'Tren inferior A', emoji: '🦵', ex: ['prensa', 'curl_femoral', 'ext_cuadriceps', 'hip_thrust', 'gemelos_pie', 'plancha'] },
-  3: { key: 'cardio', name: 'Cardio + core', emoji: '🚴', ex: ['cardio_z2', 'plancha', 'dead_bug', 'pallof'] },
-  4: { key: 'sup_b', name: 'Tren superior B', emoji: '💪', ex: ['press_inclinado_manc', 'remo_manc', 'jalon_neutro', 'peck_deck', 'face_pull', 'curl_martillo', 'press_frances'] },
-  5: { key: 'inf_b', name: 'Tren inferior B', emoji: '🦵', ex: ['sentadilla_goblet', 'pm_rumano', 'estocadas', 'abduccion', 'gemelos_sentado', 'crunch_polea'] },
+  1: { key: 'sup_a', name: 'Tren superior A', emoji: '💪', ex: ['press_pecho_maq', 'jalon_pecho', 'press_hombro_manc', 'remo_polea', 'elev_laterales', 'curl_manc', 'ext_triceps_polea', 'flexiones', 'dead_bug'], fixedSets: { flexiones: 2, dead_bug: 2 } },
+  2: { key: 'inf_a', name: 'Tren inferior A', emoji: '🦵', ex: ['prensa', 'curl_femoral', 'ext_cuadriceps', 'hip_thrust', 'gemelos_pie', 'plancha', 'elev_piernas'], fixedSets: { plancha: 2, elev_piernas: 2 } },
+  3: { key: 'acc', name: 'Hombros, brazos y core', emoji: '💪', ex: ['elev_laterales', 'face_pull', 'curl_manc', 'ext_triceps_polea', 'pallof', 'plancha'], rir: '2-3',
+       note: 'Día más liviano: dejá 2-3 reps en reserva aunque la fase diga menos, para no llegar cansado al jueves.' },
+  4: { key: 'sup_b', name: 'Tren superior B', emoji: '💪', ex: ['press_inclinado_manc', 'remo_manc', 'jalon_neutro', 'peck_deck', 'face_pull', 'curl_martillo', 'press_frances', 'flexiones', 'plancha_lateral'], fixedSets: { flexiones: 2, plancha_lateral: 2 } },
+  5: { key: 'inf_b', name: 'Tren inferior B', emoji: '🦵', ex: ['sentadilla_goblet', 'pm_rumano', 'estocadas', 'abduccion', 'gemelos_sentado', 'crunch_polea', 'plancha'], fixedSets: { crunch_polea: 2, plancha: 2 } },
+};
+
+// Guía de bici por día (0 = domingo ... 6 = sábado)
+const BIKE_GUIDE = {
+  intro: 'Si el mismo día hay gym y bici: primero el gym y después la bici. Casi todos los días, 30-60 min suave (zona 2: podés hablar pero no cantar).',
+  days: {
+    1: 'Bici: solo suave (30-60 min), mañana hay piernas.',
+    2: 'Bici: después del gym, 20-40 min suave.',
+    3: 'Bici: 30-60 min suave.',
+    4: 'Bici: solo suave (30-60 min), mañana hay piernas.',
+    5: 'Bici: después del gym, 20-40 min suave.',
+    6: 'Bici: salida larga de 1-2 h. Desde la semana 3, este día va la salida exigente de la semana.',
+    0: 'Bici: salida larga de 1-2 h a ritmo suave (si no la hiciste el sábado).',
+  },
 };
 
 const LEVEL_TITLES = [

@@ -78,8 +78,10 @@ function weekNumber(dateStr = today()) {
   return Math.max(1, Math.floor(diff / 7) + 1);
 }
 function phaseFor(week) { return PHASES.find(p => week >= p.from && week <= p.to) || PHASES[PHASES.length - 1]; }
-function setsFor(exId, phase) {
+function setsFor(exId, phase, dayNum) {
   const ex = EXERCISES[exId];
+  const fixed = dayNum && ROUTINE[dayNum].fixedSets;
+  if (fixed && fixed[exId]) return fixed[exId];
   if (ex.cardio) return 1;
   if (phase.compoundSets && COMPOUNDS.includes(exId)) return phase.compoundSets;
   return phase.sets;
@@ -95,10 +97,11 @@ function lastEntryFor(exId) {
   }
   return null;
 }
-function suggestion(exId, phase) {
+function suggestion(exId, phase, dayNum) {
   const ex = EXERCISES[exId];
   const [lo, hi] = repRange(exId, phase);
-  const nSets = setsFor(exId, phase);
+  const nSets = setsFor(exId, phase, dayNum);
+  const rir = (dayNum && ROUTINE[dayNum].rir) || phase.rir;
   if (ex.cardio) return { kg: null, reps: phase.cardio, text: `Objetivo: ${phase.cardio} min a ritmo conversacional.` };
   const last = lastEntryFor(exId);
   if (ex.time) {
@@ -108,7 +111,7 @@ function suggestion(exId, phase) {
     return { kg: null, reps: target, text: `La última vez: ${best} s. Hoy probá ${target} s.` };
   }
   if (!last) {
-    return { kg: null, reps: hi, text: `Primera vez: elegí un peso con el que hagas ${hi} reps dejando ${phase.rir} en reserva. Mejor quedarte corto.` };
+    return { kg: null, reps: hi, text: `Primera vez: elegí un peso con el que hagas ${hi} reps dejando ${rir} en reserva. Mejor quedarte corto.${ex.bodyweight ? ' (Peso corporal: anotá 0 kg.)' : ''}` };
   }
   const done = last.sets.filter(s => s.done);
   const topKg = Math.max(...done.map(s => s.kg || 0));
@@ -228,8 +231,8 @@ function startSession(dayNum) {
   state.session = {
     dayNum, date, week, phaseId: phase.id, startedAt: Date.now(),
     ex: r.ex.map(id => {
-      const sug = suggestion(id, phase);
-      const n = setsFor(id, phase);
+      const sug = suggestion(id, phase, dayNum);
+      const n = setsFor(id, phase, dayNum);
       return { id, sets: Array.from({ length: n }, () => ({ kg: sug.kg, reps: null, done: false })) };
     }),
   };
@@ -360,6 +363,7 @@ function viewHoy(s) {
   } else if (r) {
     workoutCard = `<div class="card"><div class="row between"><h3>${r.emoji} Hoy: ${esc(r.name)}</h3><span class="pill">${r.ex.length} ejercicios</span></div>
       <p class="muted small">${r.ex.map(id => esc(EXERCISES[id].name)).join(' · ')}</p>
+      ${r.note ? `<p class="small" style="color:var(--gold)">${esc(r.note)}</p>` : ''}
       <button class="btn primary block" data-action="start" data-day="${dow}">Empezar entrenamiento</button></div>`;
   } else {
     workoutCard = `<div class="card"><h3>🛋️ Fin de semana: descanso del gimnasio</h3>
@@ -375,6 +379,7 @@ function viewHoy(s) {
     </div>
     ${workoutCard}
     ${!state.session ? `<details class="card"><summary class="muted">Entrenar otro día de la rutina</summary><div class="row wrap" style="margin-top:10px">${otherDays}</div></details>` : ''}
+    <div class="card small">🚴 ${esc(BIKE_GUIDE.days[dow])} <span class="muted">Registrala con el botón de abajo.</span></div>
     <div class="card">
       <div class="row between"><h3>Misiones del día</h3><span class="muted small">+${XP.habit} XP c/u</span></div>
       <div class="habits">${HABITS.map(x => `<button class="habit ${h[x.id] ? 'on' : ''}" data-action="habit" data-h="${x.id}"><span class="em">${x.em}</span>${esc(x.name)}</button>`).join('')}</div>
@@ -402,7 +407,7 @@ function viewSesion() {
   const R = ROUTINE[ses.dayNum];
   const cards = ses.ex.map((e, i) => {
     const ex = EXERCISES[e.id];
-    const sug = suggestion(e.id, phase);
+    const sug = suggestion(e.id, phase, ses.dayNum);
     const [lo, hi] = repRange(e.id, phase);
     const unit = ex.cardio ? 'min' : (ex.time ? 'seg' : 'reps');
     const target = ex.cardio ? `${phase.cardio} min` : `${e.sets.length} × ${lo}-${hi} ${unit}`;
@@ -427,12 +432,14 @@ function viewSesion() {
   }).join('');
   return `
     <div class="row between" style="margin-bottom:12px">
-      <div><h2 style="margin:0">${R.emoji} ${esc(R.name)}</h2><div class="muted small">Semana ${ses.week} · ${esc(phase.name)} · RIR ${phase.rir}</div></div>
+      <div><h2 style="margin:0">${R.emoji} ${esc(R.name)}</h2><div class="muted small">Semana ${ses.week} · ${esc(phase.name)} · RIR ${R.rir || phase.rir}</div></div>
     </div>
+    ${R.note ? `<p class="small" style="color:var(--gold)">${esc(R.note)}</p>` : ''}
     <p class="muted small">Completá kg y reps, y tocá ✔ al terminar cada serie: arranca el descanso de ${state.settings.restSec} s. <b>RIR</b> = reps que te quedan en reserva.</p>
     ${cards}
     <button class="btn primary block" data-action="finish">🏁 Terminar entrenamiento</button>
-    <button class="btn danger block" style="margin-top:10px" data-action="cancel-session">Descartar entrenamiento</button>`;
+    <button class="btn danger block" style="margin-top:10px" data-action="cancel-session">Descartar entrenamiento</button>
+    <div style="height:84px" aria-hidden="true"></div>`;
 }
 
 // ---------- Rutina ----------
@@ -440,21 +447,25 @@ function viewRutina() {
   const week = weekNumber(), cur = phaseFor(week);
   const phases = PHASES.map(p => `
     <div class="list-item"><div class="grow">
-      <b>${esc(p.name)}</b> <span class="muted small">${p.to > 100 ? `semana ${p.from} en adelante` : `semanas ${p.from}-${p.to}`}</span>
-      <div class="muted small">${p.compoundSets ? `${p.compoundSets} series en básicos, ${p.sets} en el resto` : `${p.sets} series`} × ${p.reps[0]}-${p.reps[1]} reps · RIR ${p.rir} · cardio ${p.cardio} min</div>
+      <b>${esc(p.name)}</b> <span class="muted small">${p.to > 100 ? `semana ${p.from} en adelante` : p.from === p.to ? `semana ${p.from}` : `semanas ${p.from}-${p.to}`}</span>
+      <div class="muted small">${p.compoundSets ? `${p.compoundSets} series en básicos, ${p.sets} en el resto` : `${p.sets} series`} × ${p.reps[0]}-${p.reps[1]} reps · RIR ${p.rir}</div>
     </div>${p.id === cur.id ? '<span class="pill green">Actual</span>' : ''}</div>`).join('');
   const days = ['', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes'];
   const routine = Object.entries(ROUTINE).map(([n, d]) => `
-    <div class="card"><h3>${days[n]} · ${d.emoji} ${esc(d.name)}</h3>
-      ${d.ex.map(id => `<div class="list-item" data-action="guide" data-id="${id}" style="cursor:pointer"><div class="grow">${esc(EXERCISES[id].name)}<div class="muted small">${esc(EXERCISES[id].group)}</div></div><span class="muted">📖</span></div>`).join('')}
+    <div class="card"><h3>${days[n]} · ${d.emoji} ${esc(d.name)}</h3>${d.note ? `<p class="small muted" style="margin-top:0">${esc(d.note)}</p>` : ''}
+      ${d.ex.map(id => `<div class="list-item" data-action="guide" data-id="${id}" style="cursor:pointer"><div class="grow">${esc(EXERCISES[id].name)}<div class="muted small">${esc(EXERCISES[id].group)}${d.fixedSets && d.fixedSets[id] ? ` · cierre, ${d.fixedSets[id]} series` : ''}</div></div><span class="muted">📖</span></div>`).join('')}
     </div>`).join('');
+  const dayNames = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+  const bike = `<div class="card"><h3>🚴 Guía de bici</h3><p class="muted small" style="margin-top:0">${esc(BIKE_GUIDE.intro)}</p>
+    ${[1, 2, 3, 4, 5, 6, 0].map(n => `<div class="list-item small"><b style="width:84px;flex:none">${dayNames[n]}</b><span class="grow">${esc(BIKE_GUIDE.days[n].replace(/^Bici: /, ''))}</span></div>`).join('')}</div>`;
   return `
     <h2>Tu rutina</h2>
     <div class="card"><h3>Plan de reintroducción (6 semanas)</h3>
-      <p class="muted small" style="margin-top:0">Pensado para volver después de años sin entrenar: máquinas y mancuernas, técnica primero y cargas que suben de a poco. Calentá 5-10 min antes (bici fija o caminata) y hacé 1 serie liviana del primer ejercicio.</p>
+      <p class="muted small" style="margin-top:0">Pensado para volver después de un tiempo sin entrenar fuerte: máquinas y mancuernas, técnica primero y cargas que suben de a poco. Calentá 5-10 min antes (bici fija o caminata) y hacé 1 serie liviana del primer ejercicio.</p>
       ${phases}
     </div>
     ${routine}
+    ${bike}
     <p class="muted small">Tocá un ejercicio para ver cómo hacerlo. Si una máquina está ocupada, usá la alternativa más parecida y anotala igual.</p>`;
 }
 
@@ -635,7 +646,7 @@ function settingsModal() {
     <p class="muted small" style="margin-top:0">Los datos se guardan solo en este celular. Exportá un respaldo de vez en cuando (por ejemplo a Google Drive).</p>
     <div class="row"><button class="btn grow" data-action="export">⬇️ Exportar</button><label class="btn grow" style="text-align:center">⬆️ Importar<input type="file" accept="application/json,.json" id="import-file" hidden></label></div>
     <button class="btn danger block" style="margin-top:16px" data-action="reset">Borrar todos los datos</button>
-    <p class="muted small" style="text-align:center;margin-top:14px">Versión 1.1</p>`);
+    <p class="muted small" style="text-align:center;margin-top:14px">Versión 1.2</p>`);
 }
 
 // ================= Eventos =================
@@ -654,7 +665,8 @@ document.addEventListener('click', e => {
       if (!st.done) {
         const exd = EXERCISES[ex.id];
         const phase = PHASES.find(p => p.id === ses.phaseId);
-        if (st.reps == null) st.reps = suggestion(ex.id, phase).reps ?? repRange(ex.id, phase)[1];
+        if (st.reps == null) st.reps = suggestion(ex.id, phase, ses.dayNum).reps ?? repRange(ex.id, phase)[1];
+        if (exd.bodyweight && st.kg == null) st.kg = 0;
         if (!exd.cardio && !exd.time && st.kg == null) { toast('Cargá el peso (kg) de la serie'); return; }
         st.done = true;
         if (!exd.cardio) startRest();
