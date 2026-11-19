@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0f1115">
+  <meta name="description" content="Rutina de gimnasio, progreso con niveles y registro de peso y bici.">
+  <title>Nivel Fit</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="top">
+    <div class="lvl-chip"><span class="lvl-badge" id="hdr-level">1</span></div>
+    <h1><span id="hdr-title">Reiniciando</span></h1>
+    <button class="icon-btn" data-action="settings" aria-label="Ajustes">⚙️</button>
+  </header>
+  <main id="app"></main>
+  <div class="toast-wrap" id="toasts"></div>
+  <nav class="bottom">
+    <button data-go="hoy"><span class="em">🏠</span>Hoy</button>
+    <button data-go="rutina"><span class="em">📋</span>Rutina</button>
+    <button data-go="progreso"><span class="em">🏆</span>Progreso</button>
+    <button data-go="cuerpo"><span class="em">⚖️</span>Cuerpo</button>
+  </nav>
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
