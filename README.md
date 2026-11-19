@@ -9,7 +9,7 @@ App personal de gimnasio, instalable en el celular (PWA). Sin servidor: los dato
 - Registro de kg, reps y series, con temporizador de descanso.
 - Sugerencia de progresión automática (doble progresión: al completar el tope de reps, sube el peso).
 - XP, niveles, niveles por grupo muscular, rachas, récords personales y logros.
-- Guía de técnica por ejercicio y enlace a videos.
+- Guía de técnica por ejercicio con demostración animada (imágenes de [free-exercise-db](https://github.com/yuhonas/free-exercise-db), dominio público) y enlace a videos.
 - Registro de peso y cintura con gráfico, IMC y estimación de calorías y proteína.
 - Registro de bici y cardio. Misiones diarias: agua, sueño y pasos.
 - Respaldo: exportar e importar los datos en JSON (Ajustes).

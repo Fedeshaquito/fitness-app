@@ -416,8 +416,9 @@ function viewSesion() {
       </tr>`).join('');
     return `<div class="card ex">
       <div class="ex-head">
-        <div class="grow"><div class="name">${esc(ex.name)}</div><div class="muted small">${target} · ${esc(ex.group)}</div></div>
-        <button class="btn sm" data-action="guide" data-id="${e.id}">📖 Guía</button>
+        ${demoHtml(e.id, true)}
+        <div class="grow"><div class="name">${esc(ex.name)}</div><div class="muted small">${target} · ${esc(ex.group)}</div>
+          <button class="btn sm" style="margin-top:6px" data-action="guide" data-id="${e.id}">▶️ Ver cómo se hace</button></div>
       </div>
       <div class="suggest">${esc(sug.text)}</div>
       <table class="sets"><thead><tr><th>#</th>${showKg ? '<th>kg</th>' : ''}<th>${unit}</th><th></th></tr></thead><tbody>${rows}</tbody></table>
@@ -589,10 +590,19 @@ function activityForm() {
       <button class="btn primary block">Guardar</button>
     </form>`);
 }
+function demoHtml(id, thumb = false) {
+  const a = `demos/${id}-0.jpg`, b = `demos/${id}-1.jpg`;
+  return `<div class="demo ${thumb ? 'thumb' : ''}" ${thumb ? `data-action="guide" data-id="${id}"` : ''}>
+    <img src="${a}" alt="" loading="lazy"><img class="b" src="${b}" alt="Demostración: ${esc(EXERCISES[id].name)}" loading="lazy">
+    ${thumb ? '<span class="play">▶</span>' : ''}</div>`;
+}
 function guideModal(id) {
   const ex = EXERCISES[id];
   const yt = 'https://www.youtube.com/results?search_query=' + encodeURIComponent(ex.q);
-  modal(`<h2>${esc(ex.name)}</h2><span class="pill">${esc(ex.group)}</span>
+  modal(`<h2>${esc(ex.name)}</h2>
+    ${demoHtml(id)}
+    <div class="credit">Imágenes: free-exercise-db (dominio público)</div>
+    <p style="margin:10px 0 0"><span class="pill">${esc(ex.group)}</span></p>
     <h3 style="margin-top:14px">Claves de la técnica</h3>
     <ul class="tips">${ex.tips.map(t => `<li>${esc(t)}</li>`).join('')}</ul>
     <a class="btn block" href="${yt}" target="_blank" rel="noopener" style="text-align:center;text-decoration:none;display:block">▶️ Ver videos en YouTube</a>
@@ -625,7 +635,7 @@ function settingsModal() {
     <p class="muted small" style="margin-top:0">Los datos se guardan solo en este celular. Exportá un respaldo de vez en cuando (por ejemplo a Google Drive).</p>
     <div class="row"><button class="btn grow" data-action="export">⬇️ Exportar</button><label class="btn grow" style="text-align:center">⬆️ Importar<input type="file" accept="application/json,.json" id="import-file" hidden></label></div>
     <button class="btn danger block" style="margin-top:16px" data-action="reset">Borrar todos los datos</button>
-    <p class="muted small" style="text-align:center;margin-top:14px">Versión 1.0</p>`);
+    <p class="muted small" style="text-align:center;margin-top:14px">Versión 1.1</p>`);
 }
 
 // ================= Eventos =================
